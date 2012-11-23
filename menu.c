@@ -7,11 +7,11 @@ void LCDstart(void) {
     _delay_ms(1000);
     Serial_Init(9600, false);
     LCDupdate();
-    brightness = 30;
+    brightness = 15;
     LCDbrightnessUpdate();
 }
 
-void LCDmanage(void) {
+void ButtonManage(void) {
     int leftClick   = debounce(buttonLeft, 'B');
     int rightClick  = debounce(buttonRight, 'B');
     int upClick     = debounce(buttonUp, 'E');
@@ -40,6 +40,8 @@ void LCDmanage(void) {
             case menuState_settings_brightness:
                 if (leftClick)
                     menuState=menuState_settings;
+                if (rightClick)
+                    menuState=menuState_settings;
                 if (upClick) {
                     if ((brightness<=30) && ((brightness+5)<=30)) {
                         brightness = brightness + 5;
@@ -57,6 +59,55 @@ void LCDmanage(void) {
                 }
                 if (downClick) {
                     menuState=menuState_buttons;
+                }
+                if (rightClick) {
+                    ADC_SetupChannel(4);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL4);
+                    menuState=menuState_x;
+                }
+                break;
+            case menuState_x:
+                if (leftClick) {
+                    menuState=menuState_adc;
+                }
+                if (rightClick) {
+                    ADC_SetupChannel(5);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL5);
+                    menuState=menuState_y;
+                }
+                break;
+            case menuState_y:
+                if (leftClick) {
+                    ADC_SetupChannel(4);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL4);
+                    menuState=menuState_x;
+                }
+                if (rightClick) {
+                    ADC_SetupChannel(6);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL6);
+                    menuState=menuState_z;
+                }
+                break;
+            case menuState_z:
+                if (leftClick) {
+                    ADC_SetupChannel(5);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL5);
+                    menuState=menuState_y;
+                }
+                if (rightClick) {
+                    ADC_SetupChannel(7);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL7);
+                    menuState=menuState_pot;
+                }
+                break;
+            case menuState_pot:
+                if (leftClick) {
+                    ADC_SetupChannel(6);
+                    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL6);
+                    menuState=menuState_z;
+                }
+                if (rightClick) {
+                    menuState=menuState_adc;
                 }
                 break;
             case menuState_buttons:
@@ -81,39 +132,63 @@ void LCDmanage(void) {
 
         if (leftClick || rightClick || upClick || downClick || centerClick) {
             click = true;
-            LCDupdate();
+            update = true;
         }
     }
-}
-
-static void LCDupdate(void) {
     switch (menuState) {
-        case menuState_init:
-            LCDwrite("Hello, Josh!");
-            break;
-        case menuState_settings:
-            LCDwrite("Settings:");
-            LCDnextLine("Nothing!");
-            break;
-        case menuState_settings_brightness:
-            LCDwrite("S: Brightness");
-            sprintf(brightnessStr, "%d", brightness);
-            LCDnextLine(brightnessStr);
-            LCDbrightnessUpdate();
-            break;
-        case menuState_adc:
+        case menuState_x:
+        case menuState_y:
+        case menuState_z:
+        case menuState_pot:
             while (!(ADC_IsReadingComplete())) {};
             adc_value = ADC_GetResult();
-            LCDwrite("ADC #1");
             sprintf(adcStr, "%d", adc_value);
             LCDnextLine(adcStr);
             break;
-        case menuState_buttons:
-            LCDwrite("Buttons!");
-            LCDnextLine(button);
-            break;
         default:
             break;
+    }
+}
+
+void LCDupdate(void) {
+    if (update) {
+        switch (menuState) {
+            case menuState_init:
+                LCDwrite("Hello, Josh!");
+                break;
+            case menuState_settings:
+                LCDwrite("Settings:");
+                LCDnextLine("Nothing!");
+                break;
+            case menuState_settings_brightness:
+                LCDwrite("S: Brightness");
+                sprintf(brightnessStr, "%d", brightness);
+                LCDnextLine(brightnessStr);
+                LCDbrightnessUpdate();
+                break;
+            case menuState_adc:
+                LCDwrite("ADC values");
+                break;
+            case menuState_x:
+                LCDwrite("X");
+                break;
+            case menuState_y:
+                LCDwrite("Y");
+                break;
+            case menuState_z:
+                LCDwrite("Z");
+                break;
+            case menuState_pot:
+                LCDwrite("Pot");
+                break;
+            case menuState_buttons:
+                LCDwrite("Buttons!");
+                LCDnextLine(button);
+                break;
+            default:
+                break;
+        }
+        update = false;
     }
 }
 

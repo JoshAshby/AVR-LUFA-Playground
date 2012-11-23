@@ -26,7 +26,8 @@ int main(void)
 
     for (;;)
     {
-        LCDmanage();
+        ButtonManage();
+        LCDupdate();
         USB_USBTask();
     }
 }
@@ -58,8 +59,6 @@ void SetupHardware(void)
 
     LCDstart();
     ADC_Init(ADC_FREE_RUNNING | ADC_PRESCALE_32);
-    ADC_SetupChannel(6);
-    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL6);
 }
 
 void EVENT_USB_Device_Connect(void) {}
