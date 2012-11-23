@@ -1,7 +1,7 @@
 #include "menu.h"
 #include "global.h"
 
-static enum menuStates_t menuState=menuState_init;
+static enum menuStates_t menuState=menuState_gyroX;
 
 void LCDstart(void) {
     _delay_ms(1000);
@@ -9,6 +9,11 @@ void LCDstart(void) {
     LCDupdate();
     brightness = 15;
     LCDbrightnessUpdate();
+
+    ADC_SetupChannel(4);
+    ADC_StartReading(ADC_REFERENCE_AVCC | ADC_RIGHT_ADJUSTED | ADC_CHANNEL4);
+    TWI_WritePacket(G_ADDRESS, 10, &DLPF_FS, sizeof(DLPF_FS), &gyroSetup, sizeof(gyroSetup));
+    TWI_WritePacket(G_ADDRESS, 10, &SMPLRT_DIV, sizeof(SMPLRT_DIV), &gyroSampleRate, sizeof(gyroSampleRate));
 }
 
 void ButtonManage(void) {
@@ -58,7 +63,7 @@ void ButtonManage(void) {
                     menuState=menuState_init;
                 }
                 if (downClick) {
-                    menuState=menuState_buttons;
+                    menuState=menuState_gyro;
                 }
                 if (rightClick) {
                     ADC_SetupChannel(4);
@@ -110,9 +115,41 @@ void ButtonManage(void) {
                     menuState=menuState_adc;
                 }
                 break;
+            case menuState_gyro:
+                if (upClick)
+                    menuState=menuState_adc;
+                if (downClick)
+                    menuState=menuState_buttons;
+                if (rightClick)
+                    menuState=menuState_gyroX;
+                break;
+            case menuState_gyroX:
+                InternalReadAddress = GX_L;
+                InternalReadAddressHigh = GX_H;
+/*                if (leftClick)
+                    menuState=menuState_gyro;
+                if (rightClick)
+                    menuState=menuState_gyroY;*/
+                break;
+            case menuState_gyroY:
+                InternalReadAddress = GY_L;
+                InternalReadAddressHigh = GY_H;
+                if (leftClick)
+                    menuState=menuState_gyroX;
+                if (rightClick)
+                    menuState=menuState_gyroZ;
+                break;
+            case menuState_gyroZ:
+                InternalReadAddress = GZ_L;
+                InternalReadAddressHigh = GZ_H;
+                if (leftClick)
+                    menuState=menuState_gyroY;
+                if (rightClick)
+                    menuState=menuState_gyro;
+                break;
             case menuState_buttons:
                 if (upClick) {
-                    menuState=menuState_adc;
+                    menuState=menuState_gyro;
                     button = NULL;
                 }
                 if (downClick) {
@@ -145,6 +182,20 @@ void ButtonManage(void) {
             sprintf(adcStr, "%d", adc_value);
             LCDnextLine(adcStr);
             break;
+        case menuState_gyroX:
+        case menuState_gyroY:
+        case menuState_gyroZ:
+            TWI_ReadPacket(G_ADDRESS, 10, &InternalReadAddressHigh, sizeof(InternalReadAddressHigh), &GyroPacketHigh, sizeof(GyroPacketHigh));
+            TWI_ReadPacket(G_ADDRESS, 10, &InternalReadAddress, sizeof(InternalReadAddress), &GyroPacket, sizeof(GyroPacket));
+            gyroValue = GyroPacket | (GyroPacketHigh<<8);
+            sprintf(gyroStr, "%d", gyroValue);
+            LCDnextLine(gyroStr);
+            _delay_ms(15);
+            while (!(ADC_IsReadingComplete())) {};
+            dacValue = ADC_GetResult();
+//            dacValue = gyroValue;
+            TWI_WritePacket(MCP_ADDRESS, 10, &dacOutput, sizeof(dacOutput), &dacValue, sizeof(dacValue));
+            break;
         default:
             break;
     }
@@ -169,13 +220,19 @@ void LCDupdate(void) {
             case menuState_adc:
                 LCDwrite("ADC values");
                 break;
+            case menuState_gyro:
+                LCDwrite("Gyro values");
+        break;
             case menuState_x:
+            case menuState_gyroX:
                 LCDwrite("X");
                 break;
             case menuState_y:
+            case menuState_gyroY:
                 LCDwrite("Y");
                 break;
             case menuState_z:
+            case menuState_gyroZ:
                 LCDwrite("Z");
                 break;
             case menuState_pot:

@@ -37,8 +37,23 @@ static uint8_t brightness = 15;
 static char brightnessStr[2];
 static uint16_t adc_value = 0;
 static char adcStr[10];
-static uint16_t gyro_value = 0;
 static char gyroStr[10];
+
+static uint8_t InternalReadAddress = 0x1B;
+static uint8_t GyroPacket;
+static uint8_t InternalReadAddressHigh = 0x1C;
+static uint8_t GyroPacketHigh;
+static uint16_t gyroValue = 5;
+
+static uint8_t WHO_AM_I = 0x00;
+static uint8_t SMPLRT_DIV= 0x15;
+static uint8_t DLPF_FS = 0x16;
+
+static uint8_t gyroSetup = 0x18;
+static uint8_t gyroSampleRate = 0x00;
+
+static uint16_t dacValue;
+static uint8_t dacOutput = 0x68;
 
 void LCDstart(void);
 void ButtonManage(void);

@@ -29,9 +29,9 @@ freenode/#linuxandsci - JoshAshby
 #include "Descriptors.h"
 
 #include <LUFA/Drivers/USB/USB.h>
-#include <LUFA/Drivers/Board/LEDs.h>
 #include <LUFA/Drivers/Peripheral/Serial.h>
 #include <LUFA/Drivers/Peripheral/ADC.h>
+#include <LUFA/Drivers/Peripheral/TWI.h>
 
 //-----------------------------------------------
 //LUFA Stuff
@@ -50,7 +50,7 @@ freenode/#linuxandsci - JoshAshby
 //Josh's Stuff
 //-----------------------------------------------
 //Debounce Stuff
-#define DEBOUNCE_TIME       0.8
+#define DEBOUNCE_TIME       2
 #define SAMPLE_FREQUENCY    10
 #define MAXIMUM             (DEBOUNCE_TIME * SAMPLE_FREQUENCY)
 
@@ -80,12 +80,14 @@ freenode/#linuxandsci - JoshAshby
 //========================
 #define MCP_ADDRESS 0xC0 //address of the MCP I2C DAC
 //addresses of the IGT I2C gyroscope
+#define G_ADDRESS 0x68
 #define GX_H    0x1D
 #define GX_L    0x1E
 #define GY_H    0x1F
 #define GY_L    0x20
 #define GZ_H    0x21
 #define GZ_L    0x22
+
 //Functions
 //========================
 inline int debounce(int inputPin, char port) {

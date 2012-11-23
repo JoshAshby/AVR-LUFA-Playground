@@ -57,8 +57,10 @@ void SetupHardware(void)
     PORTD &= ~(1<<buttonCenter);
     PORTE &= ~(1<<buttonUp);
 
+    ADC_Init(ADC_FREE_RUNNING | ADC_PRESCALE_16);
+    TWI_Init(TWI_BIT_PRESCALE_1, 10);
+
     LCDstart();
-    ADC_Init(ADC_FREE_RUNNING | ADC_PRESCALE_32);
 }
 
 void EVENT_USB_Device_Connect(void) {}
