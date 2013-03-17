@@ -80,7 +80,7 @@ freenode/#linuxandsci - JoshAshby
 //========================
 #define MCP_ADDRESS 0xC0 //address of the MCP I2C DAC
 //addresses of the IGT I2C gyroscope
-#define G_ADDRESS 0x68
+#define G_ADDRESS 0x69
 #define GX_H    0x1D
 #define GX_L    0x1E
 #define GY_H    0x1F
